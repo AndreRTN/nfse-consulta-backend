@@ -14,14 +14,22 @@ import java.util.stream.Collectors;
 public class CreditoService {
 
     private final CreditoRepository creditoRepository;
+    private final KafkaEventPublisher kafkaEventPublisher;
 
     @Autowired
-    public CreditoService(CreditoRepository creditoRepository) {
+    public CreditoService(CreditoRepository creditoRepository, KafkaEventPublisher kafkaEventPublisher) {
         this.creditoRepository = creditoRepository;
+        this.kafkaEventPublisher = kafkaEventPublisher;
     }
 
     public List<CreditoPresenter> buscarCreditosPorNumeroNfse(String numeroNfse) {
         List<Credito> creditos = creditoRepository.findByNumeroNfse(numeroNfse);
+
+        List<CreditoPresenter> resultado = creditos.stream()
+                .map(this::convertToPresenter)
+                .toList();
+
+        kafkaEventPublisher.publicarConsultaPorNumeroNfse(numeroNfse, resultado.size());
         return creditos.stream()
                 .map(this::convertToPresenter)
                 .collect(Collectors.toList());
@@ -29,7 +37,10 @@ public class CreditoService {
 
     public Optional<CreditoPresenter> buscarCreditoPorNumeroCredito(String numeroCredito) {
         Optional<Credito> credito = creditoRepository.findByNumeroCredito(numeroCredito);
-        return credito.map(this::convertToPresenter);
+        Optional<CreditoPresenter> resultado = credito.map(this::convertToPresenter);
+
+        kafkaEventPublisher.publicarConsultaPorNumeroCredito(numeroCredito, resultado.isPresent());
+        return resultado;
     }
 
     private CreditoPresenter convertToPresenter(Credito credito) {
