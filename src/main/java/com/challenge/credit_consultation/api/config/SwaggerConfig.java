@@ -19,7 +19,7 @@ public class SwaggerConfig {
                         .version("1.0")
                         .description("API de consulta de créditos constituídos"))
                 .servers(Collections.singletonList(
-                        new Server().url("http://localhost:8080").description("Servidor local")
+                        new Server().url("http://localhost:8084/api").description("Servidor local")
                 ));
     }
 }
