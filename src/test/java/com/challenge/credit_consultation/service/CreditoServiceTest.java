@@ -25,6 +25,9 @@ class CreditoServiceTest {
     @Mock
     private CreditoRepository creditoRepository;
 
+    @Mock
+    private KafkaEventPublisher kafkaEventPublisher;
+
     @InjectMocks
     private CreditoService creditoService;
 
@@ -71,6 +74,7 @@ class CreditoServiceTest {
         assertEquals(BigDecimal.valueOf(950.0), presenter.getBaseCalculo());
 
         verify(creditoRepository, times(1)).findByNumeroNfse(numeroNfse);
+        verify(kafkaEventPublisher, times(1)).publicarConsultaPorNumeroNfse(numeroNfse, 1);
     }
 
     @Test
@@ -86,6 +90,7 @@ class CreditoServiceTest {
         assertNotNull(resultado);
         assertTrue(resultado.isEmpty());
         verify(creditoRepository, times(1)).findByNumeroNfse(numeroNfse);
+        verify(kafkaEventPublisher, times(1)).publicarConsultaPorNumeroNfse(numeroNfse, 0);
     }
 
     @Test
@@ -105,6 +110,7 @@ class CreditoServiceTest {
         assertEquals("Sim", presenter.getSimplesNacional());
 
         verify(creditoRepository, times(1)).findByNumeroCredito(numeroCredito);
+        verify(kafkaEventPublisher, times(1)).publicarConsultaPorNumeroCredito(numeroCredito, true);
     }
 
     @Test
@@ -119,6 +125,7 @@ class CreditoServiceTest {
         // Assert
         assertFalse(resultado.isPresent());
         verify(creditoRepository, times(1)).findByNumeroCredito(numeroCredito);
+        verify(kafkaEventPublisher, times(1)).publicarConsultaPorNumeroCredito(numeroCredito, false);
     }
 
     @Test
@@ -133,5 +140,6 @@ class CreditoServiceTest {
         // Assert
         assertTrue(resultado.isPresent());
         assertEquals("Não", resultado.get().getSimplesNacional());
+        verify(kafkaEventPublisher, times(1)).publicarConsultaPorNumeroCredito("12345", true);
     }
 }
