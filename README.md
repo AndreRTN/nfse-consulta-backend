@@ -11,7 +11,7 @@ Aplicação Spring Boot para consulta de crédito com integração ao Kafka e ba
 
 ### 1. Clone o repositório
 ```bash
-git clone <url-do-repositorio>
+git clone https://github.com/AndreRTN/nfse-consulta-backend
 cd credit-consultation
 ```
 
