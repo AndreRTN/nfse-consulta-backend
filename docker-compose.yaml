@@ -9,6 +9,11 @@ services:
       - '5432:5432'
     networks:
       - credit-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U myuser -d credit_consultation"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   zookeeper:
     image: confluentinc/cp-zookeeper:7.4.0
@@ -17,11 +22,17 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
     networks:
       - credit-network
+    healthcheck:
+      test: ["CMD", "bash", "-c", "echo 'ruok' | nc localhost 2181"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   kafka:
     image: confluentinc/cp-kafka:7.4.0
     depends_on:
-      - zookeeper
+      zookeeper:
+        condition: service_healthy
     ports:
       - "9092:9092"
     environment:
@@ -33,13 +44,20 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     networks:
       - credit-network
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:29092"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   kafka-ui:
     image: provectuslabs/kafka-ui
     container_name: kafka-ui
     depends_on:
-      - kafka
-      - zookeeper
+      kafka:
+        condition: service_healthy
+      zookeeper:
+        condition: service_healthy
     ports:
       - "8080:8080"
     restart: always
@@ -49,13 +67,16 @@ services:
       - KAFKA_CLUSTERS_0_ZOOKEEPER=zookeeper:2181
     networks:
       - credit-network
+
   app:
     build: .
     ports:
       - "8084:8084"
     depends_on:
-      - postgres
-      - kafka
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/credit_consultation
@@ -64,6 +85,7 @@ services:
       - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
     networks:
       - credit-network
+    restart: unless-stopped
 
 networks:
   credit-network:
