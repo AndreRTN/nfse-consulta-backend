@@ -60,7 +60,6 @@ docker-compose up --build
 
 - **Porta**: 8084
 - **Context Path**: /api
-- **Profile**: docker (quando executado via Docker)
 - **Logs SQL**: habilitado
 - **Swagger**: habilitado em /api-docs
 
